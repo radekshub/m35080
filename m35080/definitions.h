@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 #include <SPI.h>
 int WRITE_ENABLE = 9;
 int WRITE_ENABLE_VALUE = HIGH;

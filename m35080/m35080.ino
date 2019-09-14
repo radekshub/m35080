@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 #include "definitions.h"
 #include "setup.h"
 

@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 void writeTest()
 {
     WRITE_ENABLE_VALUE = HIGH;

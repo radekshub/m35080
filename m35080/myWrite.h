@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 void myWrite(uint16_t myAddress, uint8_t myValue)
 {
     SPI.beginTransaction(sPISettings);

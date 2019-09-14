@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 uint8_t myRead(uint16_t myAddress)
 {
     SPI.beginTransaction(sPISettings);

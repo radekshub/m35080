@@ -1,3 +1,5 @@
+/* Copyright (c) 2019, Radek Sebela (r.sebela@gmail.com) */
+
 void printAll()
 {
     Serial.print("======================================================\n0000 : ");
