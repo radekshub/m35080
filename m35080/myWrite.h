@@ -2,7 +2,7 @@
 
 void myWrite(uint16_t myAddress, uint8_t myValue)
 {
-    SPI.beginTransaction(sPISettings);
+    SPI.beginTransaction(spiSettings);
     digitalWrite(SS, LOW);
     SPI.transfer(WRITE);
     SPI.transfer16(myAddress);
