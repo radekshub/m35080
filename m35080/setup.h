@@ -18,5 +18,5 @@ void setup() {
     Serial.print(MISO);
     Serial.print(", SCK: ");
     Serial.print(SCK);
-    Serial.println("\nDONE");
+    Serial.println("\nDONE\nCOMMANDS:\nCMD:TEST;");
 }
