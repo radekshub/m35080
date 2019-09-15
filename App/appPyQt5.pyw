@@ -1,6 +1,7 @@
 import sys
 import serial
 import serial.tools.list_ports
+import io
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QListWidget
 from PyQt5.QtGui import QIcon
@@ -10,6 +11,7 @@ comlist = serial.tools.list_ports.comports()
 
 ser = serial.Serial()
 ser.baudrate = 9600
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 
 class App(QMainWindow):
 
@@ -87,6 +89,10 @@ class App(QMainWindow):
     def openButtonOnClick(self):
         ser.port = self.listwidget.selectedItems()[0].text()
         ser.open()
+        sio.write("\n")
+        sio.flush()
+        hello = sio.readline()
+        print(hello == "hello\n")
         self.listwidget.setEnabled(False)
         self.reloadButton.setEnabled(False)        
         self.openButton.setEnabled(False)
