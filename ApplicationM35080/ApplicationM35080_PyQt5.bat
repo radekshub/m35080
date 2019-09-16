@@ -1,0 +1,1 @@
+c:\Users\%USERNAME%\AppData\Local\Programs\Python\Python37\python ".\ApplicationM35080\ApplicationM35080_PyQt5.pyw"
