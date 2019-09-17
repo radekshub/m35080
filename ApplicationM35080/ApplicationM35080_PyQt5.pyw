@@ -2,6 +2,7 @@ import sys
 import serial
 import serial.tools.list_ports
 import array
+import time
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QListWidget
 from PyQt5.QtGui import QIcon
@@ -137,6 +138,9 @@ class App(QMainWindow):
         QMessageBox.question(self, 'M35080 - Communication Test', response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
 
     def readAllButtonOnClick(self):
+        QMessageBox.question(self, 'M35080', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
+        time.sleep(3)
+        totalBytes = 0
         for addressIndex in range(32):
             address = addressIndex * 32
             readCmd = "CMD:READ," + "0x%04X" % address + ",0x%02X" % 32 + ";"
@@ -150,12 +154,17 @@ class App(QMainWindow):
                 dataPair = xxx.split("=")
                 if len(dataPair) == 2:
                     DATA[int(dataPair[0], 0)] = int(dataPair[1], 0)
+                    totalBytes = totalBytes + 1
         self.dataListwidget.clear()
         for index in range(32):
             line = "0x%04X: " % (index * 32)
             for item in range(32):
                 line = line + "%02X," % DATA[index * 32 + item]
             self.dataListwidget.insertItem(self.dataListwidget.count(), line)
+        if totalBytes == 1024:
+            QMessageBox.question(self, 'M35080 - Reading complete.', "OK: Total received bytes from device: " + str(totalBytes) + ". Verify data!", QMessageBox.Ok, QMessageBox.Ok)
+        else:
+            QMessageBox.critical(self, 'M35080 - Reading ERROR!', "ERROR: Total received bytes from device: " + str(totalBytes) + "!", QMessageBox.Ok)
 
     def saveToFileButtonOnClick(self):
         file = open("M35080.bin", "wb")
