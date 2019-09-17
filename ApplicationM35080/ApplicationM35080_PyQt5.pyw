@@ -90,8 +90,8 @@ class App(QMainWindow):
 
         # Create a closeButton in the window
         self.closeButton = QPushButton('Close', self)
-        self.closeButton.move(20, 510)
-        self.closeButton.resize(200, 40)
+        self.closeButton.move(125, 510)
+        self.closeButton.resize(95, 40)
         self.closeButton.setEnabled(False)
         self.closeButton.clicked.connect(self.closeButtonOnClick)
 

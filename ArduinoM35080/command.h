@@ -43,7 +43,7 @@ void cmdRemove(String &cmd) {
 }
 
 void cmdInfo() {
-    Serial.print("M35080 Programmer\nCopyright (c) 2019 Radek Sebela\n");
+    Serial.print("M35080 Programmer\n\nCopyright (c) 2019 - Radek Sebela\n\n");
     Serial.print("BOARD PINS DEFINITIONS:\n* SS: ");
     Serial.print(SS);
     Serial.print("\n* MOSI: ");
@@ -52,7 +52,7 @@ void cmdInfo() {
     Serial.print(MISO);
     Serial.print("\n* SCK: ");
     Serial.print(SCK);
-    Serial.print("\nM35080 PINS DEFINITIONS:\n");
+    Serial.print("\n\nM35080 PINS DEFINITIONS:\n");
     Serial.print("* 1 - GND\n");
     Serial.print("* 2 - SS\n");
     Serial.print("* 3 - W\n");
