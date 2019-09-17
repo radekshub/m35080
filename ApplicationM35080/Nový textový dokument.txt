@@ -1,0 +1,3 @@
+		Clear Chip
+Load from File	Write All
+Verify		Close Port

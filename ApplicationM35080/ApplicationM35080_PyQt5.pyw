@@ -11,7 +11,7 @@ comlist = serial.tools.list_ports.comports()
 
 ser = serial.Serial()
 ser.baudrate = 9600
-ser.timeout = 3
+ser.timeout = 1
 
 DATA = array.array('B', [0]) * 1024
 
@@ -77,6 +77,14 @@ class App(QMainWindow):
         self.readAllButton.setEnabled(False)
         self.readAllButton.clicked.connect(self.readAllButtonOnClick)
 
+        # Create a saveToFileButton in the window
+        self.saveToFileButton = QPushButton('Save to File', self)
+        self.saveToFileButton.move(20, 390)
+        self.saveToFileButton.resize(95, 40)
+        #self.saveToFileButton.setEnabled(False)
+        self.saveToFileButton.clicked.connect(self.saveToFileButtonOnClick)
+
+
         # Create a closeButton in the window
         self.closeButton = QPushButton('Close', self)
         self.closeButton.move(20, 510)
@@ -126,7 +134,7 @@ class App(QMainWindow):
         ser.write(testcmd.encode())
         response = ser.read_until('\n')
         print(response)
-        QMessageBox.question(self, 'M35080 - Communication Test', "Request: CMD:INFO;\nResponse: " + response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.question(self, 'M35080 - Communication Test', response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
 
     def readAllButtonOnClick(self):
         for addressIndex in range(32):
@@ -148,6 +156,11 @@ class App(QMainWindow):
             for item in range(32):
                 line = line + "%02X," % DATA[index * 32 + item]
             self.dataListwidget.insertItem(self.dataListwidget.count(), line)
+
+    def saveToFileButtonOnClick(self):
+        file = open("M35080.bin", "wb")
+        file.write(DATA)
+        file.close()
 
     def closeButtonOnClick(self):
         ser.close()
