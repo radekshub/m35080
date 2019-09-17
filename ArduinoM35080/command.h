@@ -43,7 +43,7 @@ void cmdRemove(String &cmd) {
 }
 
 void cmdInfo() {
-    Serial.print("M35080\nCopyright (c) 2019 Radek Sebela\n");
+    Serial.print("M35080 Programmer\nCopyright (c) 2019 Radek Sebela\n");
     Serial.print("BOARD PINS DEFINITIONS:\n* SS: ");
     Serial.print(SS);
     Serial.print("\n* MOSI: ");

@@ -20,7 +20,7 @@ class App(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.title = 'M35080'
+        self.title = 'M35080 Programmer'
         self.left = 30
         self.top = 70
         self.width = 800
@@ -42,6 +42,13 @@ class App(QMainWindow):
         #self.textbox2.move(20, 400)
         #self.textbox2.resize(280, 40)
 
+        # Create a openButton in the window
+        self.openButton = QPushButton('Open Port', self)
+        self.openButton.move(125, 270)
+        self.openButton.resize(95, 40)
+        self.openButton.setEnabled(False)
+        self.openButton.clicked.connect(self.openButtonOnClick)
+
         self.portListwidget = QListWidget(self)
         self.portListwidget.move(20, 20)
         self.portListwidget.resize(200, 230)
@@ -50,6 +57,8 @@ class App(QMainWindow):
         for element in comlist:
             self.portListwidget.insertItem(index, str(element.device))
             index += 1
+        if index > 0:
+            self.portListwidget.setCurrentRow(0)
 #270,330,390,450,510
         # Create a reloadButton in the window
         self.reloadButton = QPushButton('Reload Ports', self)
@@ -57,15 +66,8 @@ class App(QMainWindow):
         self.reloadButton.resize(95, 40)
         self.reloadButton.clicked.connect(self.reloadButtonOnClick)
 
-        # Create a openButton in the window
-        self.openButton = QPushButton('Open Port', self)
-        self.openButton.move(125, 270)
-        self.openButton.resize(95, 40)
-        self.openButton.setEnabled(False)
-        self.openButton.clicked.connect(self.openButtonOnClick)
-
         # Create a testButton in the window
-        self.testButton = QPushButton('Read Info', self)
+        self.testButton = QPushButton('HW Info', self)
         self.testButton.move(20, 330)
         self.testButton.resize(95, 40)
         self.testButton.setEnabled(False)
@@ -115,6 +117,8 @@ class App(QMainWindow):
         for element in comlist:
             self.portListwidget.insertItem(index, str(element.device))
             index += 1
+        if index > 0:
+            self.portListwidget.setCurrentRow(0)
 
     def openButtonOnClick(self):
         ser.port = self.portListwidget.selectedItems()[0].text()
@@ -131,14 +135,15 @@ class App(QMainWindow):
         self.readAllButton.setEnabled(True)
 
     def testButtonOnClick(self):
+        time.sleep(5)
         testcmd = "CMD:INFO;"
         ser.write(testcmd.encode())
         response = ser.read_until('\n')
         print(response)
-        QMessageBox.question(self, 'M35080 - Communication Test', response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.question(self, 'M35080 Programmer - HW Info', response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
 
     def readAllButtonOnClick(self):
-        QMessageBox.question(self, 'M35080', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
+        QMessageBox.question(self, 'M35080 Programmer', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
         time.sleep(3)
         totalBytes = 0
         for addressIndex in range(32):
@@ -154,7 +159,7 @@ class App(QMainWindow):
                 dataPair = xxx.split("=")
                 if len(dataPair) == 2:
                     DATA[int(dataPair[0], 0)] = int(dataPair[1], 0)
-                    totalBytes = totalBytes + 1
+                    totalBytes += 1
         self.dataListwidget.clear()
         for index in range(32):
             line = "0x%04X: " % (index * 32)
@@ -162,9 +167,10 @@ class App(QMainWindow):
                 line = line + "%02X," % DATA[index * 32 + item]
             self.dataListwidget.insertItem(self.dataListwidget.count(), line)
         if totalBytes == 1024:
-            QMessageBox.question(self, 'M35080 - Reading complete.', "OK: Total received bytes from device: " + str(totalBytes) + ". Verify data!", QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.information(self, 'M35080 Programmer - Reading complete.', "OK - Total received bytes from device: " + str(totalBytes) + ". Verify data!")
+            #QMessageBox.question(self, 'M35080 - Reading complete.', "OK: Total received bytes from device: " + str(totalBytes) + ". Verify data!", QMessageBox.Ok, QMessageBox.Ok)
         else:
-            QMessageBox.critical(self, 'M35080 - Reading ERROR!', "ERROR: Total received bytes from device: " + str(totalBytes) + "!", QMessageBox.Ok)
+            QMessageBox.critical(self, 'M35080 Programmer - Reading ERROR!', "ERROR - Total received bytes from device: " + str(totalBytes) + "!", QMessageBox.Ok)
 
     def saveToFileButtonOnClick(self):
         file = open("M35080.bin", "wb")
