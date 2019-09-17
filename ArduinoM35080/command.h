@@ -43,7 +43,24 @@ void cmdRemove(String &cmd) {
 }
 
 void cmdInfo() {
-    Serial.print("INFO:M35080;\n");
+    Serial.print("M35080\nCopyright (c) 2019 Radek Sebela\n");
+    Serial.print("BOARD PINS DEFINITIONS:\n* SS: ");
+    Serial.print(SS);
+    Serial.print("\n* MOSI: ");
+    Serial.print(MOSI);
+    Serial.print("\n* MISO: ");
+    Serial.print(MISO);
+    Serial.print("\n* SCK: ");
+    Serial.print(SCK);
+    Serial.print("\nM35080 PINS DEFINITIONS:\n");
+    Serial.print("* 1 - GND\n");
+    Serial.print("* 2 - SS\n");
+    Serial.print("* 3 - W\n");
+    Serial.print("* 4 - MISO\n");
+    Serial.print("* 5 - NC\n");
+    Serial.print("* 6 - SCK\n");
+    Serial.print("* 7 - MISO\n");
+    Serial.print("* 8 - VCC 5V\n");
 }
 
 String getHex(const int value, const uint8_t precision, const bool prefix)
