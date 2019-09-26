@@ -2,11 +2,10 @@ import sys
 import serial
 import serial.tools.list_ports
 import array
-import time
 
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QListWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QLabel, QListWidget, QProgressBar
+from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtCore import pyqtSlot, QTimer
 
 comlist = serial.tools.list_ports.comports()
 
@@ -15,6 +14,7 @@ ser.baudrate = 9600
 ser.timeout = 1
 
 DATA = array.array('B', [0]) * 1024
+
 
 class App(QMainWindow):
 
@@ -95,11 +95,29 @@ class App(QMainWindow):
         self.closeButton.setEnabled(False)
         self.closeButton.clicked.connect(self.closeButtonOnClick)
 
+        self.statusLabel = QLabel('Status Info', self)
+        self.statusLabel.move(20, 565)
+        self.statusLabel.resize(110, 20)
+        #self.statusLabel.setText('Status Info 1')
+
         self.dataListwidget = QListWidget(self)
         self.dataListwidget.move(240, 20)
         self.dataListwidget.resize(540, 530)
         self.dataListwidget.setEnabled(False)
+        self.dataListwidget.setFont(QFont("Courier", 10, QFont.Bold))
         #self.dataListwidget.itemSelectionChanged.connect(self.dataListwidget_onSelectionChanged)
+
+        self.progress = QProgressBar(self)
+        self.progress.setTextVisible(False)
+        self.progress.setGeometry(240, 565, 540, 20)
+        self.progress.setMinimum(0)
+        self.progress.setMaximum(100)
+        self.progress.setValue(0)
+
+        self.initHwCounter = 0
+        self.my_qtimer = QTimer(self)
+        self.my_qtimer.timeout.connect(self.onTimer)
+        self.my_qtimer.start(1000)
 
         self.show()
     
@@ -135,7 +153,7 @@ class App(QMainWindow):
         self.readAllButton.setEnabled(True)
 
     def testButtonOnClick(self):
-        time.sleep(5)
+        #time.sleep(5)
         testcmd = "CMD:INFO;"
         ser.write(testcmd.encode())
         response = ser.read_until('\n')
@@ -144,7 +162,7 @@ class App(QMainWindow):
 
     def readAllButtonOnClick(self):
         QMessageBox.question(self, 'M35080 Programmer', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
-        time.sleep(3)
+        #time.sleep(3)
         totalBytes = 0
         for addressIndex in range(32):
             address = addressIndex * 32
@@ -164,7 +182,7 @@ class App(QMainWindow):
         for index in range(32):
             line = "0x%04X: " % (index * 32)
             for item in range(32):
-                line = line + "%02X," % DATA[index * 32 + item]
+                line = line + "%02X " % DATA[index * 32 + item]
             self.dataListwidget.insertItem(self.dataListwidget.count(), line)
         if totalBytes == 1024:
             QMessageBox.information(self, 'M35080 Programmer - Reading complete.', "OK - Total received bytes from device: " + str(totalBytes) + ". Verify data!")
@@ -186,6 +204,15 @@ class App(QMainWindow):
         self.closeButton.setEnabled(False)
         self.dataListwidget.setEnabled(False)
         self.readAllButton.setEnabled(False)
+
+    def onTimer(self):
+        print("onTimer\n")
+        self.initHwCounter = self.initHwCounter + 1
+        if self.initHwCounter < 5:
+            self.progress.setValue(self.initHwCounter * 20)
+        else:
+            self.progress.setValue(100)
+            self.my_qtimer.stop()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

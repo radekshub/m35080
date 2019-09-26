@@ -20,7 +20,6 @@ bool cmdEqual(const String &cmd, const String &pattern) {
 
 void cmdParameters(const String &cmd, String &firstParameter, String &secondParameter)
 {
-//"AAA:BBB,XXXX,YYzz";
     firstParameter = "";
     secondParameter = "";
     int index = cmd.indexOf(',');
@@ -72,7 +71,7 @@ String getHex(const int value, const uint8_t precision, const bool prefix)
         hexValue = "0x" + hexValue;
     return hexValue;
 }
-
+/*
 void cmdRead1(const String &cmd, const SPISettings &spiSettings) {
     String firstParameter;
     String secondParameter;
@@ -85,7 +84,7 @@ void cmdRead1(const String &cmd, const SPISettings &spiSettings) {
     }
     Serial.print("ERROR:PARAMETERS," + firstParameter + "," + secondParameter + ";\n");
 }
-
+*/
 void cmdRead(const String &cmd, const SPISettings &spiSettings) {
     String addressString;
     String countString;
