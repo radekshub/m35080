@@ -21,6 +21,8 @@ void loop() {
                 printAll();
             else if (cmdEqual(command, "CMD:INFO"))
                 cmdInfo();
+            else if (cmdEqual(command, "CMD:TEST"))
+                cmdTest();
             else if (cmdEqual(command, "CMD:READ"))
                 cmdRead(command, spiSettings);
             // writeTest();

@@ -62,6 +62,10 @@ void cmdInfo() {
     Serial.print("* 8 - VCC 5V\n");
 }
 
+void cmdTest() {
+    Serial.print("M35080;\n");
+}
+
 String getHex(const int value, const uint8_t precision, const bool prefix)
 {
     String hexValue = String(value, HEX);
