@@ -10,7 +10,7 @@ from PyQt5.QtCore import pyqtSlot, QTimer
 comlist = serial.tools.list_ports.comports()
 
 ser = serial.Serial()
-ser.baudrate = 9600
+ser.baudrate = 115200
 ser.timeout = 1
 
 DATA = array.array('B', [0]) * 1024
@@ -20,7 +20,7 @@ class App(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.title = 'M35080 Programmer'
+        self.title = 'M35080 Programmer  |  Copyright (c) 2019 - Radek Sebela'
         self.left = 30
         self.top = 70
         self.width = 800
@@ -31,17 +31,6 @@ class App(QMainWindow):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
     
-        ## Create textbox
-        #self.textbox = QLineEdit(self)
-        ##self.textbox.setText("")
-        #self.textbox.move(20, 300)
-        #self.textbox.resize(280, 40)
-
-        ## Create textbox2
-        #self.textbox2 = QLineEdit(self)
-        #self.textbox2.move(20, 400)
-        #self.textbox2.resize(280, 40)
-
         # Create a openButton in the window
         self.openButton = QPushButton('Open Port', self)
         self.openButton.move(125, 270)
@@ -84,12 +73,12 @@ class App(QMainWindow):
         self.saveToFileButton = QPushButton('Save to File', self)
         self.saveToFileButton.move(20, 390)
         self.saveToFileButton.resize(95, 40)
-        #self.saveToFileButton.setEnabled(False)
+        self.saveToFileButton.setEnabled(False)
         self.saveToFileButton.clicked.connect(self.saveToFileButtonOnClick)
 
 
         # Create a closeButton in the window
-        self.closeButton = QPushButton('Close', self)
+        self.closeButton = QPushButton('Close Port', self)
         self.closeButton.move(125, 510)
         self.closeButton.resize(95, 40)
         self.closeButton.setEnabled(False)
@@ -97,8 +86,7 @@ class App(QMainWindow):
 
         self.statusLabel = QLabel('Status Info', self)
         self.statusLabel.move(20, 565)
-        self.statusLabel.resize(110, 20)
-        #self.statusLabel.setText('Status Info 1')
+        self.statusLabel.resize(200, 20)
 
         self.dataListwidget = QListWidget(self)
         self.dataListwidget.move(240, 20)
@@ -114,11 +102,15 @@ class App(QMainWindow):
         self.progress.setMaximum(100)
         self.progress.setValue(0)
 
-        self.initHwCounter = 0
+        self.response = bytes('', 'utf-8')
+        self.INIT_HW_ID = 0
+        self.READING_ID = 1
+        self.timerID = self.INIT_HW_ID
+        self.totalBytes = 0
+        self.address = 0
+        self.timerCounter = 0
         self.my_qtimer = QTimer(self)
         self.my_qtimer.timeout.connect(self.onTimer)
-        self.my_qtimer.start(1000)
-
         self.show()
     
     @pyqtSlot()
@@ -139,56 +131,33 @@ class App(QMainWindow):
             self.portListwidget.setCurrentRow(0)
 
     def openButtonOnClick(self):
+        self.disableAllUI()
+        self.progress.setValue(0)
+        self.statusLabel.setText('Hardware initialization in progress.')
         ser.port = self.portListwidget.selectedItems()[0].text()
         ser.open()
-        print(ser)
-        hello = ser.read_until('\n')
-        print(hello)
-        self.portListwidget.setEnabled(False)
-        self.reloadButton.setEnabled(False)        
-        self.openButton.setEnabled(False)
-        self.testButton.setEnabled(True)
-        self.closeButton.setEnabled(True)
-        self.dataListwidget.setEnabled(True)
-        self.readAllButton.setEnabled(True)
+        #print(ser)
+        self.timerCounter = 0
+        self.timerID = self.INIT_HW_ID
+        self.my_qtimer.start(100)
 
     def testButtonOnClick(self):
-        #time.sleep(5)
         testcmd = "CMD:INFO;"
         ser.write(testcmd.encode())
-        response = ser.read_until('\n')
-        print(response)
-        QMessageBox.question(self, 'M35080 Programmer - HW Info', response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
+        self.response = ser.read_until('\n')
+        #print(self.response)
+        QMessageBox.question(self, 'M35080 Programmer', self.response.decode("utf-8"), QMessageBox.Ok, QMessageBox.Ok)
 
     def readAllButtonOnClick(self):
-        QMessageBox.question(self, 'M35080 Programmer', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
-        #time.sleep(3)
-        totalBytes = 0
-        for addressIndex in range(32):
-            address = addressIndex * 32
-            readCmd = "CMD:READ," + "0x%04X" % address + ",0x%02X" % 32 + ";"
-            print(readCmd)
-            ser.write(readCmd.encode())
-            response = ser.read_until('\n')
-            print(response)
-            separatorSplitted = str(response).split(";")
-            splittedData = separatorSplitted[0].split(",")
-            for xxx in splittedData:
-                dataPair = xxx.split("=")
-                if len(dataPair) == 2:
-                    DATA[int(dataPair[0], 0)] = int(dataPair[1], 0)
-                    totalBytes += 1
-        self.dataListwidget.clear()
-        for index in range(32):
-            line = "0x%04X: " % (index * 32)
-            for item in range(32):
-                line = line + "%02X " % DATA[index * 32 + item]
-            self.dataListwidget.insertItem(self.dataListwidget.count(), line)
-        if totalBytes == 1024:
-            QMessageBox.information(self, 'M35080 Programmer - Reading complete.', "OK - Total received bytes from device: " + str(totalBytes) + ". Verify data!")
-            #QMessageBox.question(self, 'M35080 - Reading complete.', "OK: Total received bytes from device: " + str(totalBytes) + ". Verify data!", QMessageBox.Ok, QMessageBox.Ok)
-        else:
-            QMessageBox.critical(self, 'M35080 Programmer - Reading ERROR!', "ERROR - Total received bytes from device: " + str(totalBytes) + "!", QMessageBox.Ok)
+        self.disableAllUI()
+        #QMessageBox.question(self, 'M35080 Programmer', "Be patient!", QMessageBox.Ok, QMessageBox.Ok)
+        self.statusLabel.setText('Reading in progress.')
+        self.progress.setValue(0)
+        self.totalBytes = 0
+        self.address = 0
+        self.timerCounter = 0
+        self.timerID = self.READING_ID
+        self.my_qtimer.start(100)
 
     def saveToFileButtonOnClick(self):
         file = open("M35080.bin", "wb")
@@ -197,22 +166,147 @@ class App(QMainWindow):
 
     def closeButtonOnClick(self):
         ser.close()
-        self.portListwidget.setEnabled(True)
-        self.reloadButton.setEnabled(True)        
-        self.openButton.setEnabled(True)
+        self.statusLabel.setText('Hardware disconnected.')
+        self.progress.setValue(0)
+        self.disableAllUI()
+        self.enablePortUI()
+
+    def onTimer(self):
+        #print("onTimer\n")
+        if self.timerID == self.INIT_HW_ID:
+            self.onHardwareInitializationTimer()
+        elif self.timerID == self.READING_ID:
+            self.onReadingTimer()
+        else:
+            print("ERROR - onTimer: Bad ID!\n")
+
+    def onHardwareInitializationTimer(self):
+        #print("onHardwareInitializationTimer\n")
+        self.timerCounter += 1
+        self.progress.setValue(self.timerCounter)
+        #if self.timerCounter < 25:
+            #
+        if self.timerCounter == 5 or self.timerCounter == 25 or self.timerCounter == 45 or self.timerCounter == 65 or self.timerCounter == 85:
+            self.initializationCmdTest()
+        elif self.timerCounter > 5 and self.timerCounter < 100:
+            #self.response += ser.read_until('\n', 1)
+            if ser.in_waiting > 0:
+                self.response += ser.read(ser.in_waiting)
+            if len(self.response) >= 7:
+                #print(self.response)
+                pair = self.response.decode("utf-8").split(";")
+                #print(len(pair))
+                #print(pair[0])
+                if len(pair) > 0 and pair[0] == "M35080":
+                    self.my_qtimer.stop()
+                    self.statusLabel.setText('Hardware connected.')
+                    self.progress.setValue(100)
+                    self.enableProcessUI()
+                else:
+                    self.initializationCmdTest()
+        elif self.timerCounter >= 100:
+            self.my_qtimer.stop()
+            ser.close()
+            self.progress.setValue(0)
+            self.enablePortUI()
+            errorMessage = 'ERROR: Hardware not connected!'
+            self.statusLabel.setText(errorMessage)
+            QMessageBox.critical(self, 'M35080 Programmer', errorMessage, QMessageBox.Ok)
+
+    def disableAllUI(self):
+        self.portListwidget.setEnabled(False)
+        self.reloadButton.setEnabled(False)
+        self.openButton.setEnabled(False)
         self.testButton.setEnabled(False)
         self.closeButton.setEnabled(False)
         self.dataListwidget.setEnabled(False)
         self.readAllButton.setEnabled(False)
 
-    def onTimer(self):
-        print("onTimer\n")
-        self.initHwCounter = self.initHwCounter + 1
-        if self.initHwCounter < 5:
-            self.progress.setValue(self.initHwCounter * 20)
+    def enablePortUI(self):
+        self.portListwidget.setEnabled(True)
+        self.reloadButton.setEnabled(True)
+        self.openButton.setEnabled(True)
+
+    def enableProcessUI(self):
+        self.testButton.setEnabled(True)
+        self.closeButton.setEnabled(True)
+        self.dataListwidget.setEnabled(True)
+        self.readAllButton.setEnabled(True)
+
+    def initializationCmdTest(self):
+        #self.response = ser.read_until('\n', 1000)
+        if ser.in_waiting > 0:
+            self.response = ser.read(ser.in_waiting)
+        #print(self.response)
+        self.response = bytes('', 'utf-8')
+        readCmd = "CMD:TEST;"
+        #print(readCmd)
+        ser.write(readCmd.encode())
+
+    def readingCmdRead(self):
+        #self.response = ser.read_until('\n', 1000)
+        if ser.in_waiting > 0:
+            self.response = ser.read(ser.in_waiting)
+        self.response = bytes('', 'utf-8')
+        readCmd = "CMD:READ," + "0x%04X" % self.address + ",0x%02X" % 32 + ";"
+        #print(readCmd)
+        ser.write(readCmd.encode())
+
+    def dataToListwidget(self):
+        self.dataListwidget.clear()
+        for index in range(64):
+            line = "0x%04X: " % (index * 16)
+            for item in range(16):
+                line = line + "%02X " % DATA[index * 16 + item]
+            self.dataListwidget.insertItem(self.dataListwidget.count(), line)
+        self.saveToFileButton.setEnabled(True)
+
+    def readingNext(self):
+        self.timerCounter = 0
+        self.address += 32
+        if self.address < 1024:
+            self.progress.setValue((self.address / 32) * 3)
+            self.readingCmdRead()
         else:
-            self.progress.setValue(100)
             self.my_qtimer.stop()
+            self.dataToListwidget()
+            self.enableProcessUI()
+            if self.totalBytes == 1024:
+                self.progress.setValue(100)
+                self.statusLabel.setText(str(self.totalBytes) + ' bytes has been read.')
+                #QMessageBox.information(self, 'M35080 Programmer - Reading complete.', "OK - Total received bytes from device: " + str(self.totalBytes) + ". Verify data!")
+                ##QMessageBox.question(self, 'M35080 - Reading complete.', "OK: Total received bytes from device: " + str(self.totalBytes) + ". Verify data!", QMessageBox.Ok, QMessageBox.Ok)
+            else:
+                self.progress.setValue(0)
+                errorMessage = "ERROR: " + str(self.totalBytes) + " bytes has been read!"
+                self.statusLabel.setText(errorMessage)
+                QMessageBox.critical(self, 'M35080 Programmer', errorMessage, QMessageBox.Ok)
+
+    def onReadingTimer(self):
+        #print("onReadingTimer - self.timerCounter: " + str(self.timerCounter) + "\n")
+        if self.timerCounter == 0:
+            self.readingCmdRead()
+        elif self.timerCounter < 30:
+            #self.response += ser.read_until('\n', 100)
+            if ser.in_waiting > 0:
+                self.response += ser.read(ser.in_waiting)
+            if len(self.response) == 395:
+                packetBytes = 0
+                #print("self.response - len: " + str(len(self.response)))
+                #print(self.response)
+                separatorSplitted = self.response.decode("utf-8").split(";")
+                splittedData = separatorSplitted[0].split(",")
+                for xxx in splittedData:
+                    dataPair = xxx.split("=")
+                    if len(dataPair) == 2:
+                        DATA[int(dataPair[0], 0)] = int(dataPair[1], 0)
+                        packetBytes += 1
+                if packetBytes == 32:
+                    self.totalBytes += packetBytes
+                    self.readingNext()
+        else:
+            self.readingNext()
+        self.timerCounter += 1
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
